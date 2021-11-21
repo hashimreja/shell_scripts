@@ -1,0 +1,70 @@
+#!/bin/sh 
+# -x for trace
+#check apache2 and install package
+install_apache(){
+if [ $(dpkg-query -W -f='${Status}' apache2 2>/dev/null | grep -c "ok installed") -eq 0 ];
+then
+   echo "Apache2 not installed:"  
+   if ask_confirmation ;
+   then
+        sudo apt update
+        sudo apt install apache2
+        sudo ufw allow 'Apache'
+        sudo systemctl status apache2
+        echo "Apache2 Installed Successfully"
+        install_mongo
+  else
+     install_mongo
+   fi
+else
+  install_mongo
+fi
+}
+
+#install mongodb package if not exist
+install_mongo(){
+if [ $(dpkg-query -W -f='${Status}' mongo 2>/dev/null | grep -c "ok installed") -eq 0 ];
+        then
+        echo "Mongodb not installed:"
+        if ask_confirmation ;
+        then
+        sudo apt install mongodb-org
+        sudo systemctl start mongod.service
+        sudo systemctl status mongod
+        echo "MongoDB installed Successfuly"
+        install_node
+        else
+        install_node
+        fi
+fi
+}
+#check node and install package
+install_node(){
+if [ $(dpkg-query -W -f='${Status}' nodejs 2>/dev/null | grep -c "ok installed") -eq 0 ];
+        then
+        echo "Node.js not installed:"
+        if ask_confirmation ;
+        then
+        sudo apt install nodejs
+        sudo apt install npm
+        echo "Node.js installed Successfuly"
+        nodejs -v
+        else
+        echo "Adios Amigo!!"
+        fi
+fi
+}
+#confirmation function
+ask_confirmation(){
+ while true; do
+    read -p "Do you wish to install this program?" yn
+    case $yn in
+        [Yy]* ) return 0; break;;
+        [Nn]* ) exit;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+}
+#invoke
+install_apache
+
